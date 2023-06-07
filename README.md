@@ -13,9 +13,11 @@ Serving a 404 message shouldn't be taxful on the server.
 
 ### X-Page-Count?
 Clients can request the first image (01) of a chapter to see if it exists, instead of asking the (dynamic) API.
+
 If it does exist:
 - No additional requests will have to be done to get the total page count.
 - Zero communications to Origin Server are needed, as Cloudflare caches both the image data and headers.
+
 If it doesn't:
 - Origin Server will be hit, but this is unlikely to cause huge amounts of resource usage (it's a simple 404).
 
