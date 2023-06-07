@@ -1,0 +1,1 @@
+reader_url_format = "https://read.komi.zip/?{}"
