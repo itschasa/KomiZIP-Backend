@@ -28,8 +28,8 @@ def create_chapters_response(chapter_data, new_release_data) -> flask.Response:
             "new_release": new_release_data,
             "chapters": chapter_data
         }),
-        status = 200,
-        headers = {
+        status   = 200,
+        headers  = {
             "Content-Type": "application/json"
         }
     )

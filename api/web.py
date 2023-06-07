@@ -34,6 +34,15 @@ def cdn_deliver(path):
     if "cdn." not in host:
         flask.abort(404) # Expected API 404 error.
     
+    if path == "__logs_here__":
+        return Response(
+            response = "you read the github didn't you?",
+            status   = 200,
+            headers  = {
+                'Cache-Control': "public; max-age=14400"
+            }
+        )
+
     try:
         data = flask.send_from_directory("../cdn", path)
     except werkzeug.exceptions.NotFound:
