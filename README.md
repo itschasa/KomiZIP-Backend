@@ -49,5 +49,3 @@ This keeps the content dynamic, whilst also ensuring DoS is kept to a low risk.
     - Viz Links
     - Page Count
     - Reader Links
-
-Coded in its entirety by lukemattle
