@@ -23,7 +23,7 @@ def cdn_head(path):
         flask.abort(404)
 
     data = Response()
-    data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page-count']
+    data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page_count']
     return data
 
 @app.route("/cdn/<path:path>", methods=["GET"])
@@ -52,7 +52,7 @@ def cdn_deliver(path):
         return data
     else:
         data.headers['Cache-Control'] = "public; max-age=14400"
-        data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page-count']
+        data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page_count']
         return data
 
 @app.errorhandler(404)
