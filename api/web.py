@@ -51,8 +51,9 @@ def cdn_deliver(path):
         data.status_code = 404
         return data
     else:
-        data.headers['Cache-Control'] = "public; max-age=14400"
+        data.headers['Cache-Control'] = "public; max-age=86400" # 1 day cache
         data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page_count']
+        app.logger.debug(f"cdn hit ({path})")
         return data
 
 @app.errorhandler(404)
