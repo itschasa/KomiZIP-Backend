@@ -1,1 +1,1 @@
-reader_url_format = "https://read.komi.zip/?{}"
+reader_url_format = "https://read.komi.zip/{}"
