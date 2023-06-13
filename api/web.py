@@ -82,8 +82,7 @@ def scrape_thread():
                     app.logger.info(f"new chapter downloading ({chapter_num}) ({len(pages)} pages)")
                     
                     for page_num, page in pages.items():
-                        page_num_cleaned = str(int(page_num) + 1) # page_num starts at 0, but we want to start at 1.
-                        page.download_page(f"../cdn/{chapter_num}-{page_num_cleaned if len(page_num_cleaned) == 2 else '0' + page_num_cleaned}.jpg")
+                        page.download_page(f"../cdn/{chapter_num}-{page_num if len(page_num) == 2 else '0' + page_num}.jpg")
                     
                     chapters_json[chapter_num] = {
                         "metadata": {
