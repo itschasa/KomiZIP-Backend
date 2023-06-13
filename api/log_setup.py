@@ -11,12 +11,13 @@ class CustomFormatter(logging.Formatter):
     yellow = Fore.YELLOW
     red = Fore.LIGHTRED_EX
     bold_red = Fore.RED
+    blue = Fore.LIGHTBLUE_EX
     reset = Fore.RESET
     format = "[%(asctime)s] [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
 
     FORMATS = {
         logging.DEBUG: grey + format + reset,
-        logging.INFO: reset + format + reset,
+        logging.INFO: blue + format + reset,
         logging.WARNING: yellow + format + reset,
         logging.ERROR: red + format + reset,
         logging.CRITICAL: bold_red + format + reset
