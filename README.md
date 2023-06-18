@@ -34,9 +34,7 @@ It is loaded into memory on bootup, and is saved to whenever it is changed.
 `scrape.py` acts as a library/API for Viz Manga. `web.py:scrape_thread` uses this library to fetch info every 15 seconds.
 
 ### Deobfuscation
-Images from Viz Manga are obfuscated. `minormending`'s `viz-image-deobfuscate` library is used to deobfuscate these images.
-Link: https://github.com/minormending/viz-image-deobfuscate
-
+Images from Viz Manga are obfuscated. [minormending's viz-image-deobfuscate](https://github.com/minormending/viz-image-deobfuscate) library is used to deobfuscate these images.
 
 
 ## API
