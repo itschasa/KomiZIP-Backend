@@ -36,6 +36,11 @@ It is loaded into memory on bootup, and is saved to whenever it is changed.
 ### Deobfuscation
 Images from Viz Manga are obfuscated. [minormending's viz-image-deobfuscate](https://github.com/minormending/viz-image-deobfuscate) library is used to deobfuscate these images.
 
+### i.komi.zip Redirect
+Cloudflare Page Rules is used for this:
+
+![image](https://github.com/itschasa/KomiZIP-Backend/assets/79016507/33aa5d0a-8fe0-42ac-a1cd-fa95be4b1e80)
+
 
 ## API
 The API is a dynamic endpoint that needs to use a little resources as possible, to prevent server overload.
