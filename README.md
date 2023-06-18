@@ -1,6 +1,8 @@
 # KomiZIP-Backend
 A python server for handling CDN and API calls for api.komi.zip and cdn.komi.zip using the Flask framework.
 
+### All repositories:
+[Reader](https://github.com/itschasa/KomiZIP-Reader) | [Home](https://github.com/itschasa/KomiZIP-Home) | [Backend](https://github.com/itschasa/KomiZIP-Backend)
 
 ## CDN
 The CDN isn't meant to be fast at serving files, as it expects Cloudflare to do the heavy lifting.
