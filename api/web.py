@@ -15,25 +15,31 @@ import utils
 app = Flask(__name__)
 app.logger = log_setup.logger
 
-@app.route("/cdn/<path:path>", methods=["HEAD"])
-def cdn_head(path):
-    # See comment on "cdn_deliver".
-    host = request.headers.get("Host")
-    if "cdn." not in host:
-        flask.abort(404)
+def subdomain(area):
+    def decorator(route_func):
+        def wrapper(*args, **kwargs):
+            if request.headers.get('Host', '').split('.')[0] != area:
+                flask.abort(404)
+            
+            return route_func(*args, **kwargs)
+        return wrapper
+    return decorator
 
+@app.errorhandler(404)
+def error_404(error):
+    # Less resource intensive to use a string instead of parsing dict -> json string.
+    return '{"error": true, "description": "404: Not Found."}', 404
+
+@app.route("/cdn/<path:path>", methods=["HEAD"])
+@subdomain("cdn")
+def cdn_head(path):
     data = Response()
     data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page_count']
     return data
 
 @app.route("/cdn/<path:path>", methods=["GET"])
+@subdomain("cdn")
 def cdn_deliver(path):
-    # As both "cdn." and "api." go to this server,
-    # we need to stop "api." from accessing this endpoint.
-    host = request.headers.get("Host")
-    if "cdn." not in host:
-        flask.abort(404) # Expected API 404 error.
-    
     if path == "__logs_here__":
         return Response(
             response = "you read the github didn't you?",
@@ -56,15 +62,23 @@ def cdn_deliver(path):
         app.logger.debug(f"cdn hit ({path})")
         return data
 
-@app.errorhandler(404)
-def error_404(error):
-    # Less resource intensive to use a string instead of parsing dict -> json string.
-    return '{"error": true, "description": "404: Not Found."}', 404
-
 @app.route("/v1/chapters")
+@subdomain("api")
 def list_chapters():
     # X-Ip-Country is returned by Cloudflare, as well as CORS headers.
     return chapters_json_resp
+
+@app.route("/<path:path1>/<path:path2>")
+@subdomain("i")
+def i_redirect(path1, path2):
+    return Response(
+        response = "",
+        status   = 301,
+        headers  = {
+            'Cache-Control': "public; max-age=14400",
+            "Location": f"https://cdn.komi.zip/cdn/{path1}-{path2 if len(path2) == 2 else '0' + path2}.jpg"
+        }
+    )
 
 def scrape_thread():
     global chapters_json, chapters_json_resp
