@@ -32,16 +32,6 @@ def error_404(error):
     # Less resource intensive to use a string instead of parsing dict -> json string.
     return '{"error": true, "description": "404: Not Found."}', 404
 
-@app.route("/cdn/<path:path>", methods=["HEAD"], endpoint="cdn_head")
-@subdomain("cdn")
-def cdn_head(path):
-    data = Response()
-    data.headers['Cache-Control'] = "public; max-age=180" # 3 min cache
-    data.headers['X-Page-Count'] = chapters_json[path]['metadata']['page_count']
-    title = chapters_json[path]['metadata']['title']
-    data.headers['X-Chapter-Title'] = title if title is not None else "null"
-    return data
-
 @app.route("/cdn/<path:path>", methods=["GET"], endpoint="cdn_deliver")
 @subdomain("cdn")
 def cdn_deliver(path):
@@ -53,6 +43,14 @@ def cdn_deliver(path):
                 'Cache-Control': "public; max-age=86400"
             }
         )
+    
+    if "-" not in path:
+        data = Response()
+        data.headers['Cache-Control'] = "public; max-age=180" # 3 min cache
+        data.headers['X-Page-Count'] = chapters_json[path]['metadata']['page_count']
+        title = chapters_json[path]['metadata']['title']
+        data.headers['X-Chapter-Title'] = title if title is not None else "null"
+        return data
 
     try:
         data = flask.send_from_directory("../cdn", path)
