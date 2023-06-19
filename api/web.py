@@ -37,8 +37,8 @@ def error_404(error):
 def cdn_head(path):
     data = Response()
     data.headers['Cache-Control'] = "public; max-age=180" # 3 min cache
-    data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page_count']
-    title = chapters_json[path.split('-')[0]]['metadata']['title']
+    data.headers['X-Page-Count'] = chapters_json[path]['metadata']['page_count']
+    title = chapters_json[path]['metadata']['title']
     data.headers['X-Chapter-Title'] = title if title is not None else "null"
     return data
 
