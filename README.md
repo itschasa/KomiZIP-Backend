@@ -17,7 +17,8 @@ Serving a 404 message shouldn't be taxful on the server.
 The CDN is also used to serve semi-realtime data to users, in the form of headers (HEAD request).
 This puts less stress on the origin server, whilst keeping metadata relatively up to date.
 
-All requests to this endpoint will have the header `X-Metadata`, containing the data of that chapter from the API.
+### X-Metadata
+All requests on the CDN will have the header `X-Metadata`, containing the data of that chapter from the API.
 This is used to prevent the client having to contact the (non-cached) API for information.
 
 ### CDN Folder
