@@ -47,19 +47,23 @@ def cdn_deliver(path):
     if "-" not in path:
         data = Response()
         data.headers['Cache-Control'] = "public; max-age=180" # 3 min cache
-        data.headers['X-Metadata']    = json.dumps(chapters_json[path.split('-')[0]], separators=(",", ':'))
+        try:
+            data.headers['X-Metadata']    = json.dumps(chapters_json[path.split('-')[0]], separators=(",", ':'))
+        except: pass
+        else: return data
     else:
         try:
             data = flask.send_from_directory("../cdn", path)
         except werkzeug.exceptions.NotFound:
-            data = flask.Response("404")
-            data.headers['Cache-Control'] = 'no-store' # Prevent Cloudflare caching it to allow real-time CDN uploads.
-            data.status_code = 404
-            return data
+            pass
         else:
             data.headers['Cache-Control'] = "public; max-age=86400" # 1 day cache
             app.logger.debug(f"cdn hit ({path})")
-
+            return data
+    
+    data = flask.Response("404")
+    data.headers['Cache-Control'] = 'no-store' # Prevent Cloudflare caching it to allow real-time CDN uploads.
+    data.status_code = 404
     return data
 
 @app.route("/v1/chapters", endpoint="list_chapters")
