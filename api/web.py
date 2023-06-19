@@ -141,10 +141,13 @@ def scrape_thread():
                     }
                     added_chapter_count += 1
                     app.logger.info(f"new chapter downloaded ({chapter_num}) ({len(pages)} pages)")
-
+            
+            old_keys = chapters_json.keys() 
             chapters_json = dict(sorted(chapters_json.items(), key=lambda item: float(item[0]), reverse=True))
+            new_keys = chapters_json.keys()
             chapters_json_resp = utils.create_chapters_response(chapters_json, manga.new_release)
-            utils.save_chapters_json(chapters_json) # chapters_json has been changed, so we have to save our changes.
+            if old_keys != new_keys:
+                utils.save_chapters_json(chapters_json) # chapters_json has been changed, so we have to save our changes.
         
         except Exception:
             app.logger.error("scrape_thread error; " + traceback.format_exc())
