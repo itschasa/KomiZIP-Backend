@@ -30,14 +30,14 @@ def error_404(error):
     # Less resource intensive to use a string instead of parsing dict -> json string.
     return '{"error": true, "description": "404: Not Found."}', 404
 
-@app.route("/cdn/<path:path>", methods=["HEAD"])
+@app.route("/cdn/<path:path>", methods=["HEAD"], endpoint="cdn_head")
 @subdomain("cdn")
 def cdn_head(path):
     data = Response()
     data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page_count']
     return data
 
-@app.route("/cdn/<path:path>", methods=["GET"])
+@app.route("/cdn/<path:path>", methods=["GET"], endpoint="cdn_deliver")
 @subdomain("cdn")
 def cdn_deliver(path):
     if path == "__logs_here__":
@@ -62,13 +62,13 @@ def cdn_deliver(path):
         app.logger.debug(f"cdn hit ({path})")
         return data
 
-@app.route("/v1/chapters")
+@app.route("/v1/chapters", endpoint="list_chapters")
 @subdomain("api")
 def list_chapters():
     # X-Ip-Country is returned by Cloudflare, as well as CORS headers.
     return chapters_json_resp
 
-@app.route("/<path:path1>/<path:path2>")
+@app.route("/<path:path1>/<path:path2>", endpoint="i_redirect")
 @subdomain("i")
 def i_redirect(path1, path2):
     return Response(
