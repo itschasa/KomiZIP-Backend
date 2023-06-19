@@ -13,16 +13,12 @@ Caching Headers are provided by the server.
 This is to ensure updates to users when new chapters are releases are real-time, and not delayed by cache updates.
 Serving a 404 message shouldn't be taxful on the server.
 
-### Metadata Headers
-All requests from the CDN have the following headers:
-- X-Chapter-Title
-- X-Page-Count
-
-These are used to prevent the reader having to contact the API for information.
-
 ### CDN non-image serving ( /cdn/{ chapter } )
 The CDN is also used to serve semi-realtime data to users, in the form of headers (HEAD request).
 This puts less stress on the origin server, whilst keeping metadata relatively up to date.
+
+All requests to this endpoint will have the header `X-Metadata`, containing the data of that chapter from the API.
+This is used to prevent the client having to contact the (non-cached) API for information.
 
 ### CDN Folder
 As the CDN isn't technically it's own server, the folder is used to store all the images needed. They are then served to Cloudflare and clients.
