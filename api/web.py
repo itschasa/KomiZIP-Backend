@@ -11,6 +11,8 @@ import scrape
 import statics
 import log_setup
 import utils
+from password import check_password
+
 
 app = Flask(__name__)
 app.logger = log_setup.logger
@@ -34,18 +36,20 @@ def error_404(error):
 @subdomain("cdn")
 def cdn_head(path):
     data = Response()
+    data.headers['Cache-Control'] = "public; max-age=180" # 3 min cache
     data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page_count']
+    data.headers['X-Chapter-Title'] = chapters_json[path.split('-')[0]]['metadata']['title']
     return data
 
 @app.route("/cdn/<path:path>", methods=["GET"], endpoint="cdn_deliver")
 @subdomain("cdn")
 def cdn_deliver(path):
-    if path == "__logs_here__":
+    if path == "__images_here__":
         return Response(
             response = "you read the github didn't you?",
             status   = 200,
             headers  = {
-                'Cache-Control': "public; max-age=14400"
+                'Cache-Control': "public; max-age=86400"
             }
         )
 
@@ -59,6 +63,7 @@ def cdn_deliver(path):
     else:
         data.headers['Cache-Control'] = "public; max-age=86400" # 1 day cache
         data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page_count']
+        data.headers['X-Chapter-Title'] = chapters_json[path.split('-')[0]]['metadata']['title']
         app.logger.debug(f"cdn hit ({path})")
         return data
 
@@ -68,6 +73,33 @@ def list_chapters():
     # X-Ip-Country is returned by Cloudflare, as well as CORS headers.
     return chapters_json_resp
 
+@app.route("/v1/admin/title", endpoint="edit_title")
+@subdomain("api")
+def edit_title():
+    try:
+        request_data = {
+            "pwd": str(request.json['pwd']),
+            "title": str(request.json['title']),
+            "chapter": str(request.data['chapter'])
+        }
+    except:
+        return '{"error": true, "description": "400: Bad Request."}', 400
+    else:
+        if check_password(request_data['pwd']):
+            if chapters_json.get(request_data['chapter'], False):
+                
+                chapters_json[request_data['chapter']]['metadata']['title'] = request_data['title']
+                
+                new_release = chapters_json_resp.response.split('"new_release": "', 1)[1].split('"', 1)[0]
+                chapters_json_resp = utils.create_chapters_response(chapters_json, new_release)
+                
+                utils.save_chapters_json(chapters_json) # chapters_json has been changed, so we have to save our changes.
+                return '{"error": false}'
+            else:
+                return '{"error": true, "description": "400: Unknown Chapter."}', 400
+        else:
+            return '{"error": true, "description": "401: Unauthorized."}', 401
+
 @app.route("/<path:path1>/<path:path2>", endpoint="i_redirect")
 @subdomain("i")
 def i_redirect(path1, path2):
@@ -75,7 +107,7 @@ def i_redirect(path1, path2):
         response = "",
         status   = 301,
         headers  = {
-            'Cache-Control': "public; max-age=14400",
+            'Cache-Control': "public; max-age=86400",
             "Location": f"https://cdn.komi.zip/cdn/{path1}-{path2 if len(path2) == 2 else '0' + path2}.jpg"
         }
     )
@@ -110,6 +142,8 @@ def scrape_thread():
                     }
                     added_chapter_count += 1
                     app.logger.info(f"new chapter downloaded ({chapter_num}) ({len(pages)} pages)")
+
+            chapters_json = dict(sorted(chapters_json.items(), key=lambda item: item[0], reverse=True))
 
             chapters_json_resp = utils.create_chapters_response(chapters_json, manga.new_release)
             if added_chapter_count > 0:

@@ -8,27 +8,6 @@ import time
 session = httpx.Client(timeout=3)
 real_session = tls_client.Session(client_identifier="chrome_113")
 
-# https://www.viz.com/search/series_titles.js
-# contains all titles viz has [{"title": str, "subtitle": str}]
-# seems like all non alphanumeric characters are replaced with "-"
-
-
-# login, (remember token lasts ages)
-# POST https://www.viz.com/account/try_login
-# form data: login=itschasa&pass=***&rem_user=on&uid=0
-# resp: {"ok":1, "trust_user_jwt": "eyJ****"}
-# set-cookie: remember_token=8xAYmp5rbPEVswLamKncRdhYye9m****; path=/; expires=Fri, 24 May 2024 20:48:10 GMT
-# set-cookie: _session_id=44464576beb349bc9aca05d9********; path=/; expires=Wed, 31 May 2023 20:39:57 GMT; HttpOnly
-# set-cookie: prev_login=itschasa; path=/; expires=Wed, 31 May 2023 20:39:57 GMT (maybe important idk)
-
-# this may be preferred \/ as it doesnt require csrf-token
-# refresh session_id
-# GET https://www.viz.com/account/refresh_login_links
-# with remember_token on cookie
-# Set-Cookie: _session_id=3e5c89cd18ecee25ec26480b074df27b; path=/; expires=Wed, 31 May 2023 20:51:12 GMT; HttpOnly
-# Set-Cookie: remember_token=8xAYmp5rbPEVswLamKncRdhYye9m6xnH; path=/; expires=Fri, 24 May 2024 20:51:12 GMT
-
-
 class Manga():
     def __init__(self, text_id:str, include_blank_page=False) -> None:
         self.text_id = text_id

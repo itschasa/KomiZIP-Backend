@@ -1,6 +1,9 @@
 # Remove images used for testing CDN
 *.jpg
 
+# Safe keeping of hashed password
+pwd_hash
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
