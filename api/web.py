@@ -38,7 +38,8 @@ def cdn_head(path):
     data = Response()
     data.headers['Cache-Control'] = "public; max-age=180" # 3 min cache
     data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page_count']
-    data.headers['X-Chapter-Title'] = chapters_json[path.split('-')[0]]['metadata']['title']
+    title = chapters_json[path.split('-')[0]]['metadata']['title']
+    data.headers['X-Chapter-Title'] = title if title is not None else "null"
     return data
 
 @app.route("/cdn/<path:path>", methods=["GET"], endpoint="cdn_deliver")
@@ -63,7 +64,8 @@ def cdn_deliver(path):
     else:
         data.headers['Cache-Control'] = "public; max-age=86400" # 1 day cache
         data.headers['X-Page-Count'] = chapters_json[path.split('-')[0]]['metadata']['page_count']
-        data.headers['X-Chapter-Title'] = chapters_json[path.split('-')[0]]['metadata']['title']
+        title = chapters_json[path.split('-')[0]]['metadata']['title']
+        data.headers['X-Chapter-Title'] = title if title is not None else "null"
         app.logger.debug(f"cdn hit ({path})")
         return data
 
