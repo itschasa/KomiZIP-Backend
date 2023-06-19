@@ -48,7 +48,7 @@ def cdn_deliver(path):
         data = Response()
         data.headers['Cache-Control'] = "public; max-age=180" # 3 min cache
         try:
-            data.headers['X-Metadata']    = json.dumps(chapters_json[path.split('-')[0]], separators=(",", ':'))
+            data.headers['X-Metadata'] = json.dumps(chapters_json[path.split('-')[0]], separators=(",", ':'))
         except: pass
         else: return data
     else:
@@ -142,11 +142,9 @@ def scrape_thread():
                     added_chapter_count += 1
                     app.logger.info(f"new chapter downloaded ({chapter_num}) ({len(pages)} pages)")
 
-            chapters_json = dict(sorted(chapters_json.items(), key=lambda item: item[0], reverse=True))
-
+            chapters_json = dict(sorted(chapters_json.items(), key=lambda item: float(item[0]), reverse=True))
             chapters_json_resp = utils.create_chapters_response(chapters_json, manga.new_release)
-            if added_chapter_count > 0:
-                utils.save_chapters_json(chapters_json) # chapters_json has been changed, so we have to save our changes.
+            utils.save_chapters_json(chapters_json) # chapters_json has been changed, so we have to save our changes.
         
         except Exception:
             app.logger.error("scrape_thread error; " + traceback.format_exc())
