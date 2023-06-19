@@ -47,8 +47,7 @@ def cdn_deliver(path):
     if "-" not in path:
         data = Response()
         data.headers['Cache-Control'] = "public; max-age=180" # 3 min cache
-        try:
-            data.headers['X-Metadata'] = json.dumps(chapters_json[path.split('-')[0]], separators=(",", ':'))
+        try: data.headers['X-Metadata'] = json.dumps(chapters_json[path.split('-')[0]], separators=(",", ':'))
         except: pass
         else: return data
     else:
@@ -58,6 +57,7 @@ def cdn_deliver(path):
             pass
         else:
             data.headers['Cache-Control'] = "public; max-age=86400" # 1 day cache
+            data.headers['X-Metadata'] = json.dumps(chapters_json[path.split('-')[0]], separators=(",", ':'))
             app.logger.debug(f"cdn hit ({path})")
             return data
     
