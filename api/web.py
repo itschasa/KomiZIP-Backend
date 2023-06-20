@@ -45,7 +45,7 @@ def cdn_deliver(path):
             }
         )
     
-    if "-" not in path:
+    if "-" not in path and "vol" not in path:
         data = Response()
         data.headers['Cache-Control'] = "public; max-age=180" # 3 min cache
         try: data.headers['X-Metadata'] = json.dumps(chapters_json[path.split('-')[0]], separators=(",", ':'))
