@@ -12,6 +12,7 @@ import statics
 import log_setup
 import utils
 from password import check_password
+import covers
 
 
 app = Flask(__name__)
@@ -72,7 +73,7 @@ def list_chapters():
     # X-Ip-Country is returned by Cloudflare, as well as CORS headers.
     return chapters_json_resp
 
-@app.route("/v1/admin/title", endpoint="edit_title")
+@app.route("/v1/admin/title", endpoint="edit_title", methods=['POST'])
 @subdomain("api")
 def edit_title():
     try:
@@ -98,6 +99,9 @@ def edit_title():
                 return '{"error": true, "description": "400: Unknown Chapter."}', 400
         else:
             return '{"error": true, "description": "401: Unauthorized."}', 401
+        
+# TODO: add an admin route to add volume numbers
+# /v1/admin/volumes ?
 
 @app.route("/<path:path1>/<path:path2>", endpoint="i_redirect")
 @subdomain("i")
@@ -119,7 +123,6 @@ def scrape_thread():
         try:
             chapters = manga.fetch_chapters(force_update=True)
 
-            added_chapter_count = 0
             for chapter_num, chapter in chapters.items():
                 if chapters_json.get(chapter_num) is None and chapter.free:
                     app.logger.info(f"new chapter found ({chapter_num})")
@@ -132,14 +135,15 @@ def scrape_thread():
                     chapters_json[chapter_num] = {
                         "metadata": {
                             "title": None, # Viz doesn't display the titles' of chapters, so this has to be added manually.
-                            "page_count": len(pages)
+                            "page_count": len(pages),
+                            "volume": None,
+                            "volume_cover": False
                         },
                         "links": {
                             "viz": chapter.html_url,
                             "komizip": statics.reader_url_format.format(chapter_num)
                         }
                     }
-                    added_chapter_count += 1
                     app.logger.info(f"new chapter downloaded ({chapter_num}) ({len(pages)} pages)")
             
             old_keys = chapters_json.keys() 
@@ -149,8 +153,31 @@ def scrape_thread():
             if old_keys != new_keys:
                 utils.save_chapters_json(chapters_json) # chapters_json has been changed, so we have to save our changes.
         
-        except Exception:
-            app.logger.error("scrape_thread error; " + traceback.format_exc())
+        except:
+            app.logger.error("scrape_thread error on chapter scrape; " + traceback.format_exc())
+
+
+        try:
+            # fetch all volumes, and add to list the new volumes
+            downloaded_covers = []
+            for cover in covers.fetch_all_covers():
+                downloaded = cover.download()
+                if downloaded:
+                    downloaded_covers.append(cover.volume)
+            
+            # iterate through chapters, when theres one with a new volume downloaded, change metadata (saying it has a volume cover it can use)
+            edits_made = False
+            for chapter, chapter_data in chapters_json.copy().items():
+                if chapter_data['metadata']['volume'] in downloaded_covers:
+                    if chapter_data['metadata']['volume_cover'] is False:
+                        chapters_json[chapter]['metadata']['volume_cover'] = True
+                        edits_made = True
+            
+            if edits_made:
+                utils.save_chapters_json(chapters_json)
+            
+        except:
+            app.logger.error("scrape_thread error on cover scrape; " + traceback.format_exc())
 
         time.sleep(15)
 

@@ -1,8 +1,22 @@
 {
+    "406": {
+        "metadata": {
+            "title": null,
+            "page_count": 8,
+            "volume": null,
+            "volume_cover": false
+        },
+        "links": {
+            "viz": "https://www.viz.com/vizmanga/komi-cant-communicate-chapter-39227/chapter/39227?action=read",
+            "komizip": "https://read.komi.zip/406"
+        }
+    },
     "405": {
         "metadata": {
             "title": null,
-            "page_count": 18
+            "page_count": 18,
+            "volume": null,
+            "volume_cover": false
         },
         "links": {
             "viz": "https://www.viz.com/vizmanga/komi-cant-communicate-chapter-39179/chapter/39179?action=read",
@@ -12,7 +26,9 @@
     "404": {
         "metadata": {
             "title": null,
-            "page_count": 18
+            "page_count": 18,
+            "volume": null,
+            "volume_cover": false
         },
         "links": {
             "viz": "https://www.viz.com/vizmanga/komi-cant-communicate-chapter-39125/chapter/39125?action=read",
@@ -22,7 +38,9 @@
     "403": {
         "metadata": {
             "title": null,
-            "page_count": 18
+            "page_count": 18,
+            "volume": null,
+            "volume_cover": false
         },
         "links": {
             "viz": "https://www.viz.com/vizmanga/komi-cant-communicate-chapter-39082/chapter/39082?action=read",
@@ -32,7 +50,9 @@
     "3": {
         "metadata": {
             "title": null,
-            "page_count": 2
+            "page_count": 2,
+            "volume": "1",
+            "volume_cover": true
         },
         "links": {
             "viz": "https://www.viz.com/vizmanga/komi-cant-communicate-chapter-29676/chapter/29676?action=read",
@@ -42,7 +62,9 @@
     "2": {
         "metadata": {
             "title": null,
-            "page_count": 5
+            "page_count": 5,
+            "volume": "1",
+            "volume_cover": true
         },
         "links": {
             "viz": "https://www.viz.com/vizmanga/komi-cant-communicate-chapter-29675/chapter/29675?action=read",
@@ -52,7 +74,9 @@
     "1": {
         "metadata": {
             "title": null,
-            "page_count": 9
+            "page_count": 9,
+            "volume": "1",
+            "volume_cover": true
         },
         "links": {
             "viz": "https://www.viz.com/vizmanga/komi-cant-communicate-chapter-29674/chapter/29674?action=read",
