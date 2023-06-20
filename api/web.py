@@ -195,4 +195,4 @@ if __name__ == '__main__':
     t.start()
     
     app.logger.info("bootup")
-    serve(app, host="0.0.0.0", port=8491, threads=200, _quiet=True)
+    serve(app, host="0.0.0.0", port=8491, threads=500, _quiet=True)
