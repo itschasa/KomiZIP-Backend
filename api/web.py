@@ -58,7 +58,10 @@ def cdn_deliver(path):
             pass
         else:
             data.headers['Cache-Control'] = "public; max-age=86400" # 1 day cache
-            data.headers['X-Metadata'] = json.dumps(chapters_json[path.split('-')[0]], separators=(",", ':'))
+            
+            if "vol" not in path:
+                data.headers['X-Metadata'] = json.dumps(chapters_json[path.split('-')[0]], separators=(",", ':'))
+            
             app.logger.debug(f"cdn hit ({path})")
             return data
     
