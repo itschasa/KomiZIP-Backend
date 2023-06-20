@@ -27,7 +27,8 @@ def create_chapters_response(chapter_data, new_release_data) -> flask.Response:
         response = json.dumps({
             "error": False,
             "new_release": new_release_data,
-            "chapters": chapter_data
+            "chapters": chapter_data,
+            "order": list(chapter_data.keys())
         }),
         status   = 200,
         headers  = {
