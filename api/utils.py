@@ -6,7 +6,7 @@ def get_latest_chapter(data) -> str:
     "Find latest chapter from a dict, and return it's key."
     latest = None
     for num in data.keys():
-        if latest is None or int(num) > int(latest):
+        if latest is None or float(num) > float(latest):
             latest = num
     return latest
 
