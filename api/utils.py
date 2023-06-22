@@ -1,5 +1,7 @@
 import json
 import flask
+import re
+import os
 from web import app
 
 def get_latest_chapter(data) -> str:
@@ -20,7 +22,6 @@ def save_chapters_json(data) -> None:
     f = open('chapters.json', 'w')
     f.write(json.dumps(data, indent=4))
     f.close()
-    app.logger.debug("chapters.json saved")
 
 def create_chapters_response(chapter_data, new_release_data) -> flask.Response:
     return flask.Response(
@@ -35,3 +36,55 @@ def create_chapters_response(chapter_data, new_release_data) -> flask.Response:
             "Content-Type": "application/json"
         }
     )
+
+def extract_admin_data(input_data):
+    data = {}
+    pattern = re.compile(r'([A-Za-z]+)="((?:[^\\"]|\\\\|\\")*)"|([A-Za-z]+)=([0-9]+)')
+    
+    for line in input_data.replace('\r', '').split('\n'):
+        if '=' in line:
+            matches = pattern.findall(line)
+            identifier = line.split(' ', 1)[0]
+            data[identifier] = {}
+            for match in matches:
+                starting_point = 0
+                for group in match:
+                    if group == '':
+                        starting_point += 1
+                    else: break
+                data[identifier][match[starting_point]] = match[starting_point+1].replace('\\"', '"')
+    
+    return data
+
+def validate_admin_data(input_dict):
+    for key, value in input_dict.items():
+        if '-' in key:
+            chapter1, chapter2 = key.split('-')
+            if float(chapter1) > float(chapter2):
+                return False, 'chapter1 > chapter2 (where "chapter1-chapter2 ...")'
+        
+        for ke, val in value.items():
+            if ke not in ['title', 'volume']:
+                return False, f'arg not allowed ({ke})'
+            elif ke == 'volume':
+                try:
+                    int(val)
+                except:
+                    return False, f'volume arg not int ({val})'
+    return True, ''
+
+def edit_chapter(chapter, args, chapters_json, cover_exist_cache):
+    edited = []
+    if args.get('title') is not None:
+        chapters_json[chapter]['metadata']['title'] = args['title']
+        edited.append('title')
+
+    if args.get('volume') is not None:
+        chapters_json[chapter]['metadata']['volume'] = args['volume']
+        edited.append('volume')
+        if args['volume'] in cover_exist_cache or os.path.exists(f'../cdn/vol{args["volume"]}.jpg'):
+            cover_exist_cache.append(args['volume'])
+            chapters_json[chapter]['metadata']['volume_cover'] = True
+            edited.append('volume_cover')
+    
+    return chapters_json, edited

@@ -6,6 +6,7 @@ import werkzeug
 import json
 import threading
 import traceback
+from flask_compress import Compress
 
 import scrape
 import statics
@@ -17,6 +18,7 @@ import covers
 
 app = Flask(__name__)
 app.logger = log_setup.logger
+compress = Compress(app)
 
 def subdomain(area):
     def decorator(route_func):
@@ -77,35 +79,51 @@ def list_chapters():
     # X-Ip-Country is returned by Cloudflare, as well as CORS headers.
     return chapters_json_resp
 
-@app.route("/v1/admin/title", endpoint="edit_title", methods=['POST'])
+@app.route("/v1/admin/edit", endpoint="edit_admin", methods=['POST'])
 @subdomain("api")
-def edit_title():
+def edit_admin():
+    global chapters_json_resp, chapters_json
     try:
         request_data = {
             "pwd": str(request.json['pwd']),
-            "title": str(request.json['title']),
-            "chapter": str(request.data['chapter'])
+            "data": str(request.json['data']),
         }
     except:
         return '{"error": true, "description": "400: Bad Request."}', 400
     else:
         if check_password(request_data['pwd']):
-            if chapters_json.get(request_data['chapter'], False):
+            data = utils.extract_admin_data(request_data['data'])
+            validated, reason = utils.validate_admin_data(data)
+            if validated:
+                cover_exist_cache = []
+                edited = ''
+                for key, args in data.items():
+                    if '-' in key:
+                        start, end = key.split('-')
+                        end_found = False
+                        for chapter in chapters_json.copy().keys():
+                            if chapter == end:
+                                end_found = True
+
+                            if end_found:
+                                chapters_json, edited_chapter = utils.edit_chapter(chapter, args, chapters_json, cover_exist_cache)
+                                if len(edited_chapter) != 0:
+                                    edited += f'{chapter}: {" ".join(edited_chapter)}<br>'
+
+                            if chapter == start:
+                                break
+                    else:
+                        chapters_json, edited_chapter = utils.edit_chapter(key, args, chapters_json, cover_exist_cache)
+                        if len(edited_chapter) != 0:
+                            edited += f'{key}: {" ".join(edited_chapter)}<br>'
                 
-                chapters_json[request_data['chapter']]['metadata']['title'] = request_data['title']
-                
-                new_release = chapters_json_resp.response.split('"new_release": "', 1)[1].split('"', 1)[0]
-                chapters_json_resp = utils.create_chapters_response(chapters_json, new_release)
-                
-                utils.save_chapters_json(chapters_json) # chapters_json has been changed, so we have to save our changes.
-                return '{"error": false}'
+                chapters_json_resp = utils.create_chapters_response(chapters_json, manga.new_release)
+                utils.save_chapters_json(chapters_json)
+                return json.dumps({"error": False, "edited": edited}), 200 
             else:
-                return '{"error": true, "description": "400: Unknown Chapter."}', 400
+                return json.dumps({"error": True, "description": reason}), 400
         else:
             return '{"error": true, "description": "401: Unauthorized."}', 401
-        
-# TODO: add an admin route to add volume numbers
-# /v1/admin/volumes ?
 
 @app.route("/<path:path1>/<path:path2>", endpoint="i_redirect")
 @subdomain("i")
@@ -120,13 +138,13 @@ def i_redirect(path1, path2):
     )
 
 def scrape_thread():
-    global chapters_json, chapters_json_resp
+    global chapters_json, chapters_json_resp, manga
     manga = scrape.Manga("komi-cant-communicate")
     
     while True:
         try:
             chapters = manga.fetch_chapters(force_update=True)
-
+            
             for chapter_num, chapter in chapters.items():
                 if chapters_json.get(chapter_num) is None and chapter.free:
                     app.logger.info(f"new chapter found ({chapter_num})")
@@ -150,12 +168,9 @@ def scrape_thread():
                     }
                     app.logger.info(f"new chapter downloaded ({chapter_num}) ({len(pages)} pages)")
             
-            old_keys = chapters_json.keys() 
             chapters_json = dict(sorted(chapters_json.items(), key=lambda item: float(item[0]), reverse=True))
-            new_keys = chapters_json.keys()
             chapters_json_resp = utils.create_chapters_response(chapters_json, manga.new_release)
-            if old_keys != new_keys:
-                utils.save_chapters_json(chapters_json) # chapters_json has been changed, so we have to save our changes.
+            utils.save_chapters_json(chapters_json) # chapters_json has been changed, so we have to save our changes.
         
         except:
             app.logger.error("scrape_thread error on chapter scrape; " + traceback.format_exc())
