@@ -151,13 +151,18 @@ def scrape_thread():
                     pages = chapter.fetch_pages()
                     app.logger.info(f"new chapter downloading ({chapter_num}) ({len(pages)} pages)")
                     
-                    for page_num, page in pages.items():
-                        page.download_page(f"../cdn/{chapter_num}-{page_num if len(page_num) == 2 else '0' + page_num}.jpg")
+                    page_num_counter = 1
+                    for _, page in pages.items():
+                        result = page.download_page(f"../cdn/{chapter_num}-{page_num_counter if page_num_counter > 9 else '0' + str(page_num_counter)}.jpg")
+                        if result:
+                            page_num_counter += 1
+                    
+                    page_num_counter -= 1
                     
                     chapters_json[chapter_num] = {
                         "metadata": {
                             "title": None, # Viz doesn't display the titles' of chapters, so this has to be added manually.
-                            "page_count": len(pages),
+                            "page_count": page_num_counter,
                             "volume": None,
                             "volume_cover": False
                         },
@@ -166,7 +171,7 @@ def scrape_thread():
                             "komizip": statics.reader_url_format.format(chapter_num)
                         }
                     }
-                    app.logger.info(f"new chapter downloaded ({chapter_num}) ({len(pages)} pages)")
+                    app.logger.info(f"new chapter downloaded ({chapter_num}) ({page_num_counter} pages)")
             
             chapters_json = dict(sorted(chapters_json.items(), key=lambda item: float(item[0]), reverse=True))
             chapters_json_resp = utils.create_chapters_response(chapters_json, manga.new_release)

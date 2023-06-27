@@ -1,8 +1,9 @@
+from PIL import Image
+from io import BytesIO
 import json
 import flask
 import re
 import os
-from web import app
 
 def get_latest_chapter(data) -> str:
     "Find latest chapter from a dict, and return it's key."
@@ -88,3 +89,16 @@ def edit_chapter(chapter, args, chapters_json, cover_exist_cache):
             edited.append('volume_cover')
     
     return chapters_json, edited
+
+def has_only_white_pixels(image_data):
+    img = Image.open(BytesIO(image_data))
+    img = img.convert('RGB')
+
+    width, height = img.size
+    for x in range(width):
+        for y in range(height):
+            r, g, b = img.getpixel((x, y))
+            if r != 255 or g != 255 or b != 255:
+                return False
+
+    return True

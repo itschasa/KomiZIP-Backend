@@ -5,11 +5,13 @@ import deobf
 import tls_client
 import time
 
+import utils
+
 session = httpx.Client(timeout=3)
 real_session = tls_client.Session(client_identifier="chrome_113")
 
 class Manga():
-    def __init__(self, text_id:str, include_blank_page=False) -> None:
+    def __init__(self, text_id:str) -> None:
         self.text_id = text_id
         
         self._free_url_regex = regex.compile(r'href="/vizmanga/' + self.text_id + r"-chapter-([0-9]{0,4})\/chapter\/([0-9]{0,7})\?action=read")
@@ -22,8 +24,6 @@ class Manga():
         self._new_release_last_value = None
 
         self.chapters = None
-
-        self.include_blank_page = include_blank_page
 
     def _get_manga_request(self):
         while True:
@@ -102,8 +102,6 @@ class Chapter():
 
         self.html_url = f"https://www.viz.com/vizmanga/{self._text_id}/chapter/{self.chapter_id}?action=read"
 
-        self.include_blank_page = manga.include_blank_page
-
     def fetch_page_count(self, force_update=False) -> int:
         "Returns the number of pages in the chapter. The value is replicated to `self.page_count`, and is returned if it's not None, or `force_update` is True."
         if self.page_count is None or force_update is True:
@@ -125,10 +123,7 @@ class Chapter():
                 }
             )
 
-            self.page_count = int(res.text.split("pages        = ", 1)[1].split(';', 1)[0]) # the blank page isnt included
-            
-            if self.include_blank_page:
-                self.page_count += 1
+            self.page_count = int(res.text.split("pages        = ", 1)[1].split(';', 1)[0]) + 1 # zero based index
 
         return self.page_count
 
@@ -137,10 +132,7 @@ class Chapter():
         if page_count is None:
             page_count = self.fetch_page_count()
         
-        if self.include_blank_page:
-            page_str = ''.join(f'{x},' for x in range(page_count))[:-1]
-        else:
-            page_str = ''.join(f'{x+1},' for x in range(page_count))[:-1]
+        page_str = ''.join(f'{x},' for x in range(page_count))[:-1]
 
         res = real_session.get(f"https://www.viz.com/manga/get_manga_url?device_id=3&manga_id={self.chapter_id}&pages={page_str}",
             headers={
@@ -191,12 +183,17 @@ class Page():
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
         })
 
+        if utils.has_only_white_pixels(res.content):
+            return False
+
         f = open(file_name, 'wb')
         f.write(res.content)
         f.close()
         
         if deobfuscate:
             deobf.deobfuscate_image(file_name).save(file_name)
+        
+        return True
         
 
 # Example usage of downloading 
