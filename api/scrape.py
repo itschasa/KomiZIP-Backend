@@ -74,7 +74,10 @@ class Manga():
         "Example: `7 days`, `30 minutes`.\nAuto updates every `self._new_release_update` seconds (Default: 10)."
         if time.time() + self._new_release_update > self._new_release_last_update:
             res = self._get_manga_request()
-            self._new_release_last_value = str(res.text).split("New chapter coming in ", 1)[1].split('!', 1)[0]
+            try:
+                self._new_release_last_value = str(res.text).split("New chapter coming in ", 1)[1].split('!', 1)[0]
+            except:
+                self._new_release_last_value = 'unknown'
             self._new_release_last_update = time.time()
         
         return self._new_release_last_value
