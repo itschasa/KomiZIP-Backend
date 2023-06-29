@@ -18,7 +18,17 @@ import covers
 
 app = Flask(__name__)
 app.logger = log_setup.logger
-compress = Compress(app)
+
+Compress(app)
+app.config['COMPRESS_MIMETYPES'] = [
+    'application/javascript',
+    'application/json',
+    'text/css',
+    'text/html',
+    'text/javascript',
+    'text/xml',
+    'image/jpeg'
+]
 
 def subdomain(area):
     def decorator(route_func):
