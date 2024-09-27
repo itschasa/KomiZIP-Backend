@@ -1,6 +1,7 @@
 from flask import Flask, request, Response
 from waitress import serve
 import flask
+import os
 import time
 import werkzeug
 import json
@@ -14,6 +15,7 @@ import log_setup
 import utils
 from password import check_password
 import covers
+import wiki
 
 
 app = Flask(__name__)
@@ -33,8 +35,8 @@ app.config['COMPRESS_MIMETYPES'] = [
 def subdomain(area):
     def decorator(route_func):
         def wrapper(*args, **kwargs):
-            if request.headers.get('Host', '').split('.')[0] != area:
-                flask.abort(404)
+            #if request.headers.get('Host', '').split('.')[0] != area:
+                #flask.abort(404)
             
             return route_func(*args, **kwargs)
         return wrapper
@@ -185,7 +187,6 @@ def scrape_thread():
             
             chapters_json = dict(sorted(chapters_json.items(), key=lambda item: float(item[0]), reverse=True))
             chapters_json_resp = utils.create_chapters_response(chapters_json, manga.new_release)
-            utils.save_chapters_json(chapters_json) # chapters_json has been changed, so we have to save our changes.
         
         except:
             app.logger.error("scrape_thread error on chapter scrape; " + traceback.format_exc())
@@ -197,21 +198,58 @@ def scrape_thread():
             for cover in covers.fetch_all_covers():
                 downloaded = cover.download()
                 if downloaded:
+                    app.logger.info(f"new volume cover downloaded ({cover.volume})")
                     downloaded_covers.append(cover.volume)
             
             # iterate through chapters, when theres one with a new volume downloaded, change metadata (saying it has a volume cover it can use)
-            edits_made = False
             for chapter, chapter_data in chapters_json.copy().items():
                 if chapter_data['metadata']['volume'] in downloaded_covers:
                     if chapter_data['metadata']['volume_cover'] is False:
                         chapters_json[chapter]['metadata']['volume_cover'] = True
-                        edits_made = True
-            
-            if edits_made:
-                utils.save_chapters_json(chapters_json)
             
         except:
             app.logger.error("scrape_thread error on cover scrape; " + traceback.format_exc())
+
+        
+        try:
+            # fetch all titles, and add to list the new titles
+            for chapter_num, chapter_data in chapters_json.items():
+                if chapter_data["metadata"]["title"] is None:
+                    new_title = wiki.get_title(chapter_num)
+                    if new_title is not None:
+                        chapters_json[chapter_num]["metadata"]["title"] = new_title
+                        app.logger.info(f"new title for {chapter_num} ({new_title})")
+        except:
+            app.logger.error("scrape_thread error on title scrape; " + traceback.format_exc())
+        
+
+        try:
+            # fetch all volumes from wiki, and assign chapters their volume
+            vol_id = 0
+            while True:
+                vol_id += 1
+                chapters_in_vol = wiki.get_chapters_in_volume(str(vol_id))
+                if chapters_in_vol is None:
+                    break
+                
+                for chapter in chapters_in_vol:
+                    if chapters_json.get(chapter) is not None:
+                        if chapters_json[chapter]["metadata"]["volume"] != str(vol_id):
+                            chapters_json[chapter]["metadata"]["volume"] = str(vol_id)
+                            app.logger.info(f"new volume for {chapter} ({vol_id})")
+                        
+                        if os.path.exists(f"../cdn/vol{vol_id}.jpg"):
+                            chapters_json[chapter]["metadata"]["volume_cover"] = True
+        
+        except:
+            app.logger.error("scrape_thread error on volume scrape; " + traceback.format_exc())
+
+
+        try:
+            utils.save_chapters_json(chapters_json)
+        except:
+            app.logger.error("scrape_thread error on saving chapters; " + traceback.format_exc())
+            app.logger.debug(chapters_json) # save the chapters_json to the log for debugging
 
         time.sleep(15)
 
@@ -225,4 +263,5 @@ if __name__ == '__main__':
     t.start()
     
     app.logger.info("bootup")
+    #app.run(host="0.0.0.0", port=8491)
     serve(app, host="0.0.0.0", port=8491, threads=500, _quiet=True)
