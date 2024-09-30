@@ -35,8 +35,8 @@ app.config['COMPRESS_MIMETYPES'] = [
 def subdomain(area):
     def decorator(route_func):
         def wrapper(*args, **kwargs):
-            #if request.headers.get('Host', '').split('.')[0] != area:
-                #flask.abort(404)
+            if request.headers.get('Host', '').split('.')[0] != area:
+                flask.abort(404)
             
             return route_func(*args, **kwargs)
         return wrapper
